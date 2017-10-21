@@ -59,8 +59,11 @@ class EncoderImageFull(nn.Module):
             self.cnn.classifier = nn.Sequential(
                 *list(self.cnn.classifier.children())[:-1])
         elif cnn_type.startswith('resnet'):
-            self.fc = nn.Linear(self.cnn.module.fc.in_features, embed_size)
-            self.cnn.module.fc = nn.Sequential()
+            # TODO recheck
+            self.fc = nn.Linear(self.cnn.fc.in_features, embed_size)
+            self.cnn.fc = nn.Sequential()
+            # self.fc = nn.Linear(self.cnn.module.fc.in_features, embed_size)
+            # self.cnn.module.fc = nn.Sequential()
 
         self.init_weights()
 
@@ -76,9 +79,11 @@ class EncoderImageFull(nn.Module):
 
         if arch.startswith('alexnet') or arch.startswith('vgg'):
             model.features = nn.DataParallel(model.features)
-            model.cuda()
+            if torch.cuda.is_available():
+                model.cuda()
         else:
-            model = nn.DataParallel(model).cuda()
+            if torch.cuda.is_available():
+                model = nn.DataParallel(model).cuda()
 
         return model
 
@@ -194,7 +199,11 @@ class EncoderText(nn.Module):
         # Reshape *final* output to (batch_size, hidden_size)
         padded = pad_packed_sequence(out, batch_first=True)
         I = torch.LongTensor(lengths).view(-1, 1, 1)
-        I = Variable(I.expand(x.size(0), 1, self.embed_size)-1).cuda()
+        I = Variable(I.expand(x.size(0), 1, self.embed_size)-1)
+
+        if torch.cuda.is_available():
+            I = I.cuda()
+
         out = torch.gather(padded[0], 1, I).squeeze(1)
 
         # normalization in the joint embedding space
@@ -307,6 +316,7 @@ class VSE(object):
         return state_dict
 
     def load_state_dict(self, state_dict):
+        state_dict[0] = {key.replace(".module", ""): value for key, value in state_dict[0].items()}
         self.img_enc.load_state_dict(state_dict[0])
         self.txt_enc.load_state_dict(state_dict[1])
 

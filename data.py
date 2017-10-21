@@ -285,11 +285,15 @@ def get_loader_single(data_name, split, root, json, vocab, transform,
                                 vocab=vocab,
                                 transform=transform)
 
+    pin_memory=False
+    if torch.cuda.is_available():
+        pin_memory=True
+
     # Data loader
     data_loader = torch.utils.data.DataLoader(dataset=dataset,
                                               batch_size=batch_size,
                                               shuffle=shuffle,
-                                              pin_memory=True,
+                                              pin_memory=pin_memory,
                                               num_workers=num_workers,
                                               collate_fn=collate_fn)
     return data_loader
