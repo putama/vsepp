@@ -14,6 +14,7 @@ def l2norm(X):
     """L2-normalize columns of X
     """
     norm = torch.pow(X, 2).sum(dim=1).sqrt()
+    norm = norm.unsqueeze(1) # recent version require non-singleton dimension for expand
     X = torch.div(X, norm.expand_as(X))
     return X
 

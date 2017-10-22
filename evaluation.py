@@ -93,13 +93,13 @@ def encode_data(model, data_loader, log_step=10, logging=print):
             model.txt_enc = model.txt_enc.cpu()
 
         # res = model.img_enc(torch.autograd.Variable(images[:1], volatile=True))
-        res2 = model.txt_enc(torch.autograd.Variable(captions[:1], volatile=True), lengths[:1])
-
-        import pdb
-        pdb.set_trace()
+        # res2 = model.txt_enc(torch.autograd.Variable(captions[:1], volatile=True), lengths[:1])
 
         # compute the embeddings
         img_emb, cap_emb = model.forward_emb(images, captions, lengths, volatile=True)
+
+        import pdb
+        pdb.set_trace()
 
         # initialize the numpy arrays given the size of the embeddings
         if img_embs is None:
