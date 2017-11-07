@@ -1,6 +1,5 @@
 from __future__ import print_function
 import os
-import pickle
 
 import numpy
 from data import get_test_loader
@@ -10,6 +9,8 @@ from vocab import Vocabulary  # NOQA
 import torch
 from model import VSE, order_sim
 from collections import OrderedDict
+import pickle
+import itertools
 
 from vocab import Vocabulary
 import evaluation
@@ -54,15 +55,30 @@ cap_embs = None
 # numpy array accum
 accumvecs = None
 
-for i, (images, captions, lengths, ids, paths) in enumerate(data_loader):
+idslist = []
+pathslist = []
+
+for i, (images, _, lengths, ids, paths) in enumerate(data_loader):
+    print("Computing batch-" + str(i))
     if not torch.cuda.is_available():
         model.img_enc = model.img_enc.cpu()
         model.txt_enc = model.txt_enc.cpu()
 
     imgvec = model.img_enc(torch.autograd.Variable(images, volatile=True))
 
+    idslist.append(ids)
+    pathslist.append(paths)
+
     if accumvecs is None:
         accumvecs = np.array(imgvec.data.cpu().numpy())
     else:
         accumvecs = np.append(accumvecs, imgvec.data.cpu().numpy(), axis=0)
-        import pdb; pdb.set_trace()
+
+    print(accumvecs.shape)
+
+all_ids = [i for i in itertools.chain(*idslist)]
+all_paths = [i for i in itertools.chain(*pathslist)]
+
+pickle.dump(accumvecs, open("val2014imgvecs.pkl", "wb"))
+pickle.dump(all_ids, open("val2014ids.pkl", "wb"))
+pickle.dump(all_paths, open("val2014paths.pkl", "wb"))
