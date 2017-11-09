@@ -112,7 +112,7 @@ class CocoDataset(data.Dataset):
         """This function returns a tuple that is further passed to collate_fn
         """
         vocab = self.vocab
-        root, caption, img_id, path, image, path = self.get_raw_item(index)
+        root, caption, img_id, path, image = self.get_raw_item(index)
 
         if self.transform is not None:
             image = self.transform(image)
@@ -125,7 +125,7 @@ class CocoDataset(data.Dataset):
         caption.extend([vocab(token) for token in tokens])
         caption.append(vocab('<end>'))
         target = torch.Tensor(caption)
-        return image, target, index, img_id, path
+        return image, target, index, img_id
 
     def get_raw_item(self, index):
         if index < self.bp:
@@ -140,7 +140,7 @@ class CocoDataset(data.Dataset):
         path = coco.loadImgs(img_id)[0]['file_name']
         image = Image.open(os.path.join(root, path)).convert('RGB')
 
-        return root, caption, img_id, path, image, path
+        return root, caption, img_id, path, image
 
     def __len__(self):
         return len(self.ids)
@@ -253,7 +253,7 @@ def collate_fn(data):
     """
     # Sort a data list by caption length
     data.sort(key=lambda x: len(x[1]), reverse=True)
-    images, captions, ids, img_ids, paths = zip(*data)
+    images, captions, ids, img_ids = zip(*data)
 
     # Merge images (convert tuple of 3D tensor to 4D tensor)
     images = torch.stack(images, 0)
@@ -265,7 +265,7 @@ def collate_fn(data):
         end = lengths[i]
         targets[i, :end] = cap[:end]
 
-    return images, targets, lengths, ids, paths
+    return images, targets, lengths, ids
 
 
 def get_loader_single(data_name, split, root, json, vocab, transform,

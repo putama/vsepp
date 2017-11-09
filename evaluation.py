@@ -92,14 +92,8 @@ def encode_data(model, data_loader, log_step=10, logging=print):
             model.img_enc = model.img_enc.cpu()
             model.txt_enc = model.txt_enc.cpu()
 
-        # res = model.img_enc(torch.autograd.Variable(images[:1], volatile=True))
-        # res2 = model.txt_enc(torch.autograd.Variable(captions[:1], volatile=True), lengths[:1])
-
         # compute the embeddings
         img_emb, cap_emb = model.forward_emb(images, captions, lengths, volatile=True)
-
-        import pdb
-        pdb.set_trace()
 
         # initialize the numpy arrays given the size of the embeddings
         if img_embs is None:
@@ -314,3 +308,4 @@ def t2i(images, captions, npts=None, measure='cosine', return_ranks=False):
         return (r1, r5, r10, medr, meanr), (ranks, top1)
     else:
         return (r1, r5, r10, medr, meanr)
+
