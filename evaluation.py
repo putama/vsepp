@@ -101,8 +101,8 @@ def encode_data(model, data_loader, log_step=10, logging=print):
             cap_embs = np.zeros((len(data_loader.dataset), cap_emb.size(1)))
 
         # preserve the embeddings by copying from gpu and converting to numpy
-        img_embs[ids] = img_emb.data.cpu().numpy().copy()
-        cap_embs[ids] = cap_emb.data.cpu().numpy().copy()
+        img_embs[ids, :] = img_emb.data.cpu().numpy().copy()
+        cap_embs[ids, :] = cap_emb.data.cpu().numpy().copy()
 
         # measure accuracy and record loss
         model.forward_loss(img_emb, cap_emb)
@@ -150,6 +150,9 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False):
 
     # load model state
     model.load_state_dict(checkpoint['model'])
+
+    # TODO remove
+    opt.batch_size = 4
 
     print('Loading dataset')
     data_loader = get_test_loader(split, opt.data_name, vocab, opt.crop_size,
