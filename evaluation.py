@@ -154,6 +154,7 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, log_failure=F
     # TODO remove
     opt.batch_size = 256
     fail_ids_i = None
+    fail_ids_t = None
 
     print('Loading dataset')
     data_loader = get_test_loader(split, opt.data_name, vocab, opt.crop_size,
@@ -223,7 +224,7 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, log_failure=F
     torch.save({'rt': rt, 'rti': rti}, 'ranks.pth.tar')
     
     if log_failure:
-        torch.save({'fail_ids_t': fail_ids_t, 'fail_ids_i': fail_ids_t}, 'failure_log.pth')
+        torch.save({'fail_ids_t': fail_ids_t, 'fail_ids_i': fail_ids_i}, 'failure_log.pth')
 
 def i2t(images, captions, npts=None, measure='cosine', return_ranks=False):
     """
