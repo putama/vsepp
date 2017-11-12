@@ -60,11 +60,12 @@ class EncoderImageFull(nn.Module):
             self.cnn.classifier = nn.Sequential(
                 *list(self.cnn.classifier.children())[:-1])
         elif cnn_type.startswith('resnet'):
-            # TODO recheck
-            #self.fc = nn.Linear(self.cnn.fc.in_features, embed_size)
-            #self.cnn.fc = nn.Sequential()
-            self.fc = nn.Linear(self.cnn.module.fc.in_features, embed_size)
-            self.cnn.module.fc = nn.Sequential()
+            if not torch.cuda.is_available():
+                self.fc = nn.Linear(self.cnn.fc.in_features, embed_size)
+                self.cnn.fc = nn.Sequential()
+            else:
+                self.fc = nn.Linear(self.cnn.module.fc.in_features, embed_size)
+                self.cnn.module.fc = nn.Sequential()
 
         self.init_weights()
 
@@ -317,7 +318,9 @@ class VSE(object):
         return state_dict
 
     def load_state_dict(self, state_dict):
-        #state_dict[0] = {key.replace(".module", ""): value for key, value in state_dict[0].items()}
+        # cuda version has slightly different structure
+        if not torch.cuda.is_available():
+            state_dict[0] = {key.replace(".module", ""): value for key, value in state_dict[0].items()}
         self.img_enc.load_state_dict(state_dict[0])
         self.txt_enc.load_state_dict(state_dict[1])
 
