@@ -123,7 +123,7 @@ def encode_data(model, data_loader, log_step=10, logging=print):
     return img_embs, cap_embs
 
 
-def evalrank(model_path, data_path=None, split='dev', fold5=False, log_failure=False):
+def evalrank(model_path, data_path=None, split='dev', fold5=False, save_all=False):
     """
     Evaluate a trained model on either dev or test. If `fold5=True`, 5 fold
     cross-validation is done (only for MSCOCO). Otherwise, the full data is
@@ -152,7 +152,7 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, log_failure=F
     model.load_state_dict(checkpoint['model'])
 
     # TODO remove
-    opt.batch_size = 256
+    opt.batch_size = 5
     fail_ids_i = None
     fail_ids_t = None
 
@@ -200,7 +200,7 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, log_failure=F
             print("rsum: %.1f ar: %.1f ari: %.1f" % (rsum, ar, ari))
             results += [list(r) + list(ri) + [ar, ari, rsum]]
 
-            if log_failure:
+            if save_all:
                 current_t = map(lambda x: x[0], (np.argwhere(rt0[0])+(1000 * i)) * 5)
                 current_i = map(lambda x: x[0], np.argwhere(rti0[0])+(5000 * i))
                 if i == 0:
@@ -223,7 +223,8 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, log_failure=F
 
     torch.save({'rt': rt, 'rti': rti}, 'ranks.pth.tar')
     
-    if log_failure:
+    if save_all:
+        torch.save({'img_embs': img_embs, 'cap_embs': cap_embs}, 'embeddings.pth')
         torch.save({'fail_ids_t': fail_ids_t, 'fail_ids_i': fail_ids_i}, 'failure_log.pth')
 
 def i2t(images, captions, npts=None, measure='cosine', return_ranks=False):
