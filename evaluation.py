@@ -123,7 +123,7 @@ def encode_data(model, data_loader, log_step=10, logging=print):
     return img_embs, cap_embs
 
 
-def evalrank(model_path, data_path=None, split='dev', fold5=False):
+def evalrank(model_path, data_path=None, split='dev', fold5=False, log_failure=False):
     """
     Evaluate a trained model on either dev or test. If `fold5=True`, 5 fold
     cross-validation is done (only for MSCOCO). Otherwise, the full data is
@@ -152,7 +152,8 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False):
     model.load_state_dict(checkpoint['model'])
 
     # TODO remove
-    opt.batch_size = 4
+    opt.batch_size = 256
+    fail_ids_i = None
 
     print('Loading dataset')
     data_loader = get_test_loader(split, opt.data_name, vocab, opt.crop_size,
@@ -198,6 +199,16 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False):
             print("rsum: %.1f ar: %.1f ari: %.1f" % (rsum, ar, ari))
             results += [list(r) + list(ri) + [ar, ari, rsum]]
 
+            if log_failure:
+                current_t = map(lambda x: x[0], (np.argwhere(rt0[0])+(1000 * i)) * 5)
+                current_i = map(lambda x: x[0], np.argwhere(rti0[0])+(5000 * i))
+                if i == 0:
+                    fail_ids_t = current_t
+                    fail_ids_i = current_i
+                else:
+                    fail_ids_t = fail_ids_t + current_t
+                    fail_ids_i = fail_ids_i + current_i
+
         print("-----------------------------------")
         print("Mean metrics: ")
         mean_metrics = tuple(np.array(results).mean(axis=0).flatten())
@@ -210,7 +221,9 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False):
               mean_metrics[5:10])
 
     torch.save({'rt': rt, 'rti': rti}, 'ranks.pth.tar')
-
+    
+    if log_failure:
+        torch.save({'fail_ids_t': fail_ids_t, 'fail_ids_i': fail_ids_t}, 'failure_log.pth')
 
 def i2t(images, captions, npts=None, measure='cosine', return_ranks=False):
     """

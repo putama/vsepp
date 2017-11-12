@@ -18,7 +18,7 @@ import evaluation
 split = "val"
 modelpath = "runs/coco_vse++_resnet_restval_finetune/model_best.pth.tar"
 datapath = "data/"
-evaluation.evalrank(modelpath, data_path=datapath, split="val")
+evaluation.evalrank(modelpath, data_path=datapath, split="test", fold5=True, log_failure=True)
 
 # # load model and options
 # if torch.cuda.is_available():
