@@ -267,10 +267,6 @@ def collate_fn(data):
         targets[i, :end] = cap[:end]
     return images, targets, lengths, ids, paths
 
-def quick_collate(data):
-    _, _, ids, img_ids, paths = zip(*data)
-    return img_ids, ids, paths
-
 def get_loader_single(data_name, split, root, json, vocab, transform,
                       batch_size=100, shuffle=True,
                       num_workers=2, ids=None, collate_fn=collate_fn):
@@ -382,23 +378,5 @@ def get_test_loader(split_name, data_name, vocab, crop_size, batch_size,
                                         batch_size=batch_size, shuffle=False,
                                         num_workers=workers,
                                         collate_fn=collate_fn)
-
-    return test_loader
-
-def get_quick_loader(split_name, data_name, vocab, crop_size, batch_size,
-                    workers, opt):
-    dpath = os.path.join(opt.data_path, data_name)
-
-    # Build Dataset Loader
-    roots, ids = get_paths(dpath, data_name, opt.use_restval)
-
-    transform = transforms.Compose([transforms.ToTensor()])
-    test_loader = get_loader_single(opt.data_name, split_name,
-                                    roots[split_name]['img'],
-                                    roots[split_name]['cap'],
-                                    vocab, transform, ids=ids[split_name],
-                                    batch_size=batch_size, shuffle=False,
-                                    num_workers=workers,
-                                    collate_fn=quick_collate)
 
     return test_loader
