@@ -15,10 +15,10 @@ import itertools
 from vocab import Vocabulary
 import evaluation
 
-split = "val"
+split = "test"
 modelpath = "runs/coco_vse++_resnet_restval_finetune/model_best.pth.tar"
 datapath = "data/"
-evaluation.evalrank(modelpath, data_path=datapath, split="test", fold5=True, save_all=True)
+evaluation.evalrank(modelpath, data_path=datapath, split=split, fold5=True, save_all=True)
 
 # # load model and options
 # if torch.cuda.is_available():

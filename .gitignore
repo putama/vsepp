@@ -3,3 +3,9 @@
 *.ipynb_checkpoints
 *.json
 *.pth.tar
+*.pth
+*.pkl
+*.jpg
+pycocotools
+.DS_Store
+.idea

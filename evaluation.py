@@ -151,11 +151,6 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, save_all=Fals
     # load model state
     model.load_state_dict(checkpoint['model'])
 
-    # TODO remove
-    opt.batch_size = 5
-    fail_ids_i = None
-    fail_ids_t = None
-
     print('Loading dataset')
     data_loader = get_test_loader(split, opt.data_name, vocab, opt.crop_size,
                                   opt.batch_size, opt.workers, opt)
@@ -201,6 +196,9 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, save_all=Fals
             results += [list(r) + list(ri) + [ar, ari, rsum]]
 
             if save_all:
+                # saving result for error analysis
+                fail_ids_i = None
+                fail_ids_t = None
                 current_t = map(lambda x: x[0], (np.argwhere(rt0[0])+(1000 * i)) * 5)
                 current_i = map(lambda x: x[0], np.argwhere(rti0[0])+(5000 * i))
                 if i == 0:
