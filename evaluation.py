@@ -131,8 +131,10 @@ def evalrank(model_path, data_path=None, split='dev', fold5=False, save_all=Fals
     """
     # load model and options
     if torch.cuda.is_available():
+	print('compute in GPU')
         checkpoint = torch.load(model_path)
     else:
+	print('compute in CPU')
         checkpoint = torch.load(model_path, map_location=lambda storage, loc: storage)
 
     opt = checkpoint['opt']

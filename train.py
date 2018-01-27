@@ -1,3 +1,7 @@
+import logging
+import tensorboard_logger as tb_logger
+import argparse
+
 import pickle
 import os
 import time
@@ -10,20 +14,15 @@ from vocab import Vocabulary  # NOQA
 from model import VSE
 from evaluation import i2t, t2i, AverageMeter, LogCollector, encode_data
 
-import logging
-import tensorboard_logger as tb_logger
-
-import argparse
-
-
 def main():
+    print('parsing arguments')
     # Hyper Parameters
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_path', default='/w/31/faghri/vsepp_data/',
                         help='path to datasets')
     parser.add_argument('--data_name', default='precomp',
                         help='{coco,f8k,f30k,10crop}_precomp|coco|f8k|f30k')
-    parser.add_argument('--vocab_path', default='./vocab/',
+    parser.add_argument('--vocab_path', default='./data/vocab',
                         help='Path to saved vocabulary pickle files.')
     parser.add_argument('--margin', default=0.2, type=float,
                         help='Rank loss margin.')
@@ -61,7 +60,7 @@ def main():
                         help='Dimensionality of the image embedding.')
     parser.add_argument('--finetune', action='store_true',
                         help='Fine-tune the image encoder.')
-    parser.add_argument('--cnn_type', default='vgg19',
+    parser.add_argument('--cnn_type', default='resnet152',
                         help="""The CNN used for image encoder
                         (e.g. vgg19, resnet152)""")
     parser.add_argument('--use_restval', action='store_true',
@@ -145,7 +144,7 @@ def train(opt, train_loader, model, epoch, val_loader):
         data_time.update(time.time() - end)
 
         # make sure train logger is used
-        model.logger = train_logger
+	model.logger = train_logger
 
         # Update the model
         model.train_emb(*train_data)
@@ -166,11 +165,11 @@ def train(opt, train_loader, model, epoch, val_loader):
                     data_time=data_time, e_log=str(model.logger)))
 
         # Record logs in tensorboard
-        tb_logger.log_value('epoch', epoch, step=model.Eiters)
-        tb_logger.log_value('step', i, step=model.Eiters)
-        tb_logger.log_value('batch_time', batch_time.val, step=model.Eiters)
-        tb_logger.log_value('data_time', data_time.val, step=model.Eiters)
-        model.logger.tb_log(tb_logger, step=model.Eiters)
+	tb_logger.log_value('epoch', epoch, step=model.Eiters)
+	tb_logger.log_value('step', i, step=model.Eiters)
+	tb_logger.log_value('batch_time', batch_time.val, step=model.Eiters)
+	tb_logger.log_value('data_time', data_time.val, step=model.Eiters)
+	model.logger.tb_log(tb_logger, step=model.Eiters)
 
         # validate at every val_step
         if model.Eiters % opt.val_step == 0:
@@ -238,3 +237,6 @@ def accuracy(output, target, topk=(1,)):
         correct_k = correct[:k].view(-1).float().sum(0)
         res.append(correct_k.mul_(100.0 / batch_size))
     return res
+
+if __name__ == '__main__':
+    main()

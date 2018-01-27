@@ -6,6 +6,7 @@
 *.pth
 *.pkl
 *.jpg
-pycocotools
+pycocotools/*
 .DS_Store
 .idea
+data/coco
