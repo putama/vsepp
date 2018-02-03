@@ -117,6 +117,35 @@ class EncoderImageFull(nn.Module):
 
         return features
 
+    def extract_activation(self, images):
+        activations = OrderedDict()
+        # iterate all modules of the cnn
+        x = images
+
+        # for key1, module1 in self.cnn._modules.items():
+        #     if key1.startswith('layer'):
+        #         for key2, module2 in self.cnn._modules[key1]._modules.items():
+        #             self.cnn._modules[key1]._modules[key2]
+        #         x = module(x)
+        #         activations[key] = x
+
+        # extract only layers of bottleneck modules
+        # store the activations of the convolution kernels
+        for key1, module1 in self.cnn._modules.items():
+            if key1.startswith('layer'):
+                for key2, module2 in module1._modules.items():
+                    print '{}_{}'.format(key1, key2)
+                    x = module2(x)
+                    activations['{}_{}'.format(key1, key2)] = x
+                    # for key3, module3 in module2._modules.items():
+                    #     print '{}_{}_{}'.format(key1,key2,key3)
+                    #     x = module3(x)
+                    #     if key3.startswith('conv'):
+                    #         activations['{}_{}_{}'.format(key1,key2,key3)] = x
+            else:
+                x = module1(x)
+
+        return activations
 
 class EncoderImagePrecomp(nn.Module):
 

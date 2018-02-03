@@ -144,7 +144,7 @@ def train(opt, train_loader, model, epoch, val_loader):
         data_time.update(time.time() - end)
 
         # make sure train logger is used
-	model.logger = train_logger
+        model.logger = train_logger
 
         # Update the model
         model.train_emb(*train_data)
@@ -165,11 +165,11 @@ def train(opt, train_loader, model, epoch, val_loader):
                     data_time=data_time, e_log=str(model.logger)))
 
         # Record logs in tensorboard
-	tb_logger.log_value('epoch', epoch, step=model.Eiters)
-	tb_logger.log_value('step', i, step=model.Eiters)
-	tb_logger.log_value('batch_time', batch_time.val, step=model.Eiters)
-	tb_logger.log_value('data_time', data_time.val, step=model.Eiters)
-	model.logger.tb_log(tb_logger, step=model.Eiters)
+        tb_logger.log_value('epoch', epoch, step=model.Eiters)
+        tb_logger.log_value('step', i, step=model.Eiters)
+        tb_logger.log_value('batch_time', batch_time.val, step=model.Eiters)
+        tb_logger.log_value('data_time', data_time.val, step=model.Eiters)
+        model.logger.tb_log(tb_logger, step=model.Eiters)
 
         # validate at every val_step
         if model.Eiters % opt.val_step == 0:
