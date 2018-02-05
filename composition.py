@@ -62,6 +62,8 @@ def main():
     # counter = 0
     for i, objatts in enumerate(dataset.get_all_pairs()):
         print '{} phrases encoded to vectors'.format(i*64)
+        if torch.cuda.is_available():
+            objatts = objatts.cuda()
         objattsvecs = model.txt_enc(Variable(objatts), [4 for i in range(len(objatts))])
         allobjattsvecs.append(objattsvecs)
         # TODO remove
@@ -69,7 +71,7 @@ def main():
         # if counter == 2:
         #     break
     allobjattsvecs = torch.cat(allobjattsvecs)
-    allobjattsvecs = allobjattsvecs.data.numpy()
+    allobjattsvecs = allobjattsvecs.data.cpu().numpy()
 
     totaltop5 = 0
     totaltop1 = 0
@@ -82,10 +84,10 @@ def main():
 
         # encode all attribute-object pair phrase on test set
         objattsvecs = model.txt_enc(Variable(objatts), lengths)
-        objattsvecs = objattsvecs.data.numpy()
+        objattsvecs = objattsvecs.data.cpu().numpy()
         # encode all images from test set
         imgvecs = model.img_enc(Variable(images))
-        imgvecs = imgvecs.data.numpy()
+        imgvecs = imgvecs.data.cpu().numpy()
 
         targetdist = np.einsum('ij,ij->i', imgvecs, objattsvecs)
         allobjattdist = np.dot(imgvecs, allobjattsvecs.T)
