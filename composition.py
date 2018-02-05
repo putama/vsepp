@@ -22,7 +22,7 @@ def main():
     parser.add_argument('--labels_train', default='split_labels_train.pklz')
     parser.add_argument('--labels_test', default='split_labels_test.pklz')
     parser.add_argument('--meta_data', default='split_meta_info.pklz')
-    parser.add_argument('--vocab_path', default='data/coco_vocab.pkl')
+    parser.add_argument('--vocab_path', default='data/vocab/coco_vocab.pkl')
     parser.add_argument('--crop_size', default=224)
     opt = parser.parse_args()
     print(opt)
@@ -75,6 +75,11 @@ def main():
     totaltop1 = 0
     for i, (images, objatts, lengths, imgids, imgpaths) in enumerate(dataloader):
         print '{}/{} data items encoded'.format(i*2, len(dataloader))
+
+        if torch.cuda.is_available():
+            objatts = objatts.cuda()
+            images = images.cuda()
+
         # encode all attribute-object pair phrase on test set
         objattsvecs = model.txt_enc(Variable(objatts), lengths)
         objattsvecs = objattsvecs.data.numpy()
