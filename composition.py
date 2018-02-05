@@ -1,17 +1,22 @@
 import os
 import pickle
 import argparse
+import torch
+import numpy as np
 
 from compositionutils import im_utils
 from compositionutils import data_utils
 
+from model import VSE
 from vocab import Vocabulary
 from data import get_transform
 from torch.utils import data
+from torch.autograd import Variable
 
 def main():
     print('evaluate vse on visual composition...')
     parser = argparse.ArgumentParser()
+    parser.add_argument('--model_path', default='runs/coco_vse++_best/model_best.pth.tar')
     parser.add_argument('--data_root', default='data/mitstates_data')
     parser.add_argument('--image_data', default='mit_image_data.pklz')
     parser.add_argument('--labels_train', default='split_labels_train.pklz')
@@ -39,11 +44,41 @@ def main():
     dataloader = data.DataLoader(dataset=dataset, batch_size=2, shuffle=False,
                                  collate_fn=data_utils.custom_collate)
 
-    for i, (images, objatt_tensors, imgids, imgpaths) in enumerate(dataloader):
-        print i
+    # load model params checkpoint and options
+    if torch.cuda.is_available():
+        print('compute in GPU')
+        checkpoint = torch.load(opt.model_path)
+    else:
+        print('compute in CPU')
+        checkpoint = torch.load(opt.model_path, map_location=lambda storage, loc: storage)
+    opt = checkpoint['opt']
+    # construct model
+    model = VSE(opt)
+    # load model state
+    model.load_state_dict(checkpoint['model'])
 
-    # encode all attribute-object pair phrase on test set
-    # encode all images from test set
+    allobjattsvecs = []
+    counter = 0
+    for objatts in dataset.get_all_pairs():
+        objattsvecs = model.txt_enc(Variable(objatts), [4 for i in range(len(objatts))])
+        allobjattsvecs.append(objattsvecs)
+        # TODO remove
+        counter += 1
+        if counter == 2:
+            break
+    allobjattsvecs = torch.cat(allobjattsvecs)
+
+    for i, (images, objatts, lengths, imgids, imgpaths) in enumerate(dataloader):
+        print '{}/{} data items encoded'.format(i*2, len(dataloader))
+        # encode all attribute-object pair phrase on test set
+        objattsvecs = model.txt_enc(Variable(objatts), lengths)
+        objattsvecs = objattsvecs.data.numpy()
+        # encode all images from test set
+        imgvecs = model.img_enc(Variable(images))
+        imgvecs = imgvecs.data.numpy()
+
+        targetdistance = np.einsum('ij,ij->i', imgvecs, objattsvecs)
+        break
 
     print 'done'
 

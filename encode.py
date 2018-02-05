@@ -16,7 +16,7 @@ from vocab import Vocabulary
 import evaluation
 
 split = "test"
-modelpath = "runs/coco_vse++_resnet_restval_finetune/model_best.pth.tar"
+modelpath = "runs/coco_vse++_best/model_best.pth.tar"
 datapath = "data/"
 evaluation.evalrank(modelpath, data_path=datapath, split=split, fold5=True, save_all=True)
 

@@ -28,7 +28,7 @@ class MITstatesDataset(data.Dataset):
         objatt_name = self.imgmetadata['pairNames'][objatt_id]
         objatt_tensor = self.text_to_ids(objatt_name)
 
-        if imgid == 47658:#objatt_tensor is None:
+        if objatt_tensor is None:
             return None, None, None, None
 
         return image, objatt_tensor, imgid, imgpath
@@ -52,11 +52,24 @@ class MITstatesDataset(data.Dataset):
             pair = self.text_to_ids(pairName)
             if pair is not None:
                 pairs.append(pair)
-        return pairs
+        # TODO remove
+        group_size = 4
+        grouppedpairs = []
+        for i in range(0,len(pairs),group_size):
+            grouppedpairs.append(torch.stack(pairs[i:i+group_size], 0).long())
+        return grouppedpairs
 
     def __len__(self):
         return len(self.splitdata['imIds'])
 
 def custom_collate(items):
+    items = filter(lambda x: x[0] is not None, items)
     images, objatt_tensors, imgids, imgpaths = zip(*items)
-    return images, objatt_tensors, imgids, imgpaths
+
+    lengths = [len(phrase) for phrase in objatt_tensors]
+
+    # stack images and objatt phrase into a batch
+    images = torch.stack(images, 0)
+    objatt_tensors = torch.stack(objatt_tensors, 0).long()
+
+    return images, objatt_tensors, lengths, imgids, imgpaths
