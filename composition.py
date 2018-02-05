@@ -58,16 +58,21 @@ def main():
     model.load_state_dict(checkpoint['model'])
 
     allobjattsvecs = []
-    counter = 0
-    for objatts in dataset.get_all_pairs():
+    # TODO remove
+    # counter = 0
+    for i, objatts in enumerate(dataset.get_all_pairs()):
+        print '{} phrases encoded to vectors'.format(i*64)
         objattsvecs = model.txt_enc(Variable(objatts), [4 for i in range(len(objatts))])
         allobjattsvecs.append(objattsvecs)
         # TODO remove
-        counter += 1
-        if counter == 2:
-            break
+        # counter += 1
+        # if counter == 2:
+        #     break
     allobjattsvecs = torch.cat(allobjattsvecs)
+    allobjattsvecs = allobjattsvecs.data.numpy()
 
+    totaltop5 = 0
+    totaltop1 = 0
     for i, (images, objatts, lengths, imgids, imgpaths) in enumerate(dataloader):
         print '{}/{} data items encoded'.format(i*2, len(dataloader))
         # encode all attribute-object pair phrase on test set
@@ -77,10 +82,21 @@ def main():
         imgvecs = model.img_enc(Variable(images))
         imgvecs = imgvecs.data.numpy()
 
-        targetdistance = np.einsum('ij,ij->i', imgvecs, objattsvecs)
-        break
+        targetdist = np.einsum('ij,ij->i', imgvecs, objattsvecs)
+        allobjattdist = np.dot(imgvecs, allobjattsvecs.T)
+        sorteddist = np.sort(allobjattdist)
+        top5pred = sum(targetdist > sorteddist[:,-5])
+        top1pred = sum(targetdist > sorteddist[:,-1])
+        totaltop5 += top5pred
+        totaltop1 += top1pred
 
-    print 'done'
+        # TODO remove
+        # import pdb; pdb.set_trace()
+        # break
+
+    print 'top-5 accuracy: {}, top-1 accuracy: {}'.format(
+        float(totaltop5)/len(dataset), float(totaltop1)/len(dataset)
+    )
 
 if __name__ == '__main__':
     main()

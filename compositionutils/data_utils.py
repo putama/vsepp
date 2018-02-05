@@ -53,7 +53,8 @@ class MITstatesDataset(data.Dataset):
             if pair is not None:
                 pairs.append(pair)
         # TODO remove
-        group_size = 4
+        # group_size = 4
+        group_size = 64
         grouppedpairs = []
         for i in range(0,len(pairs),group_size):
             grouppedpairs.append(torch.stack(pairs[i:i+group_size], 0).long())
