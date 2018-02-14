@@ -19,7 +19,7 @@ class MITstatesDataset(data.Dataset):
         # load image
         imgid = self.splitdata['imIds'][index]
         imgpath = self.imgdata['images'][imgid]['file_name']
-        image = Image.open(os.path.join(self.root, 'images', imgpath)).convert('RGB')
+        image = Image.open(os.path.join(self.root, 'images', imgpath.replace('_',' ',1))).convert('RGB')
         if self.transform is not None:
             image = self.transform(image)
 
@@ -64,13 +64,17 @@ class MITstatesDataset(data.Dataset):
         return len(self.splitdata['imIds'])
 
 def custom_collate(items):
-    items = filter(lambda x: x[0] is not None, items)
-    images, objatt_tensors, imgids, imgpaths = zip(*items)
+    try:
+        tmp = items
+    	items = filter(lambda x: x[0] is not None, items)
+    	images, objatt_tensors, imgids, imgpaths = zip(*items)
 
-    lengths = [len(phrase) for phrase in objatt_tensors]
+    	lengths = [len(phrase) for phrase in objatt_tensors]
 
-    # stack images and objatt phrase into a batch
-    images = torch.stack(images, 0)
-    objatt_tensors = torch.stack(objatt_tensors, 0).long()
+    	# stack images and objatt phrase into a batch
+    	images = torch.stack(images, 0)
+    	objatt_tensors = torch.stack(objatt_tensors, 0).long()
 
-    return images, objatt_tensors, lengths, imgids, imgpaths
+    	return images, objatt_tensors, lengths, imgids, imgpaths
+    except:
+        return None, None, None, None, None	

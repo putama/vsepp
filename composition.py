@@ -41,7 +41,7 @@ def main():
     dataset = data_utils.MITstatesDataset(opt.data_root, labelstest,
                                           imgdata, imgmetadata, vocab,
                                           transform=get_transform('coco', 'test', opt))
-    dataloader = data.DataLoader(dataset=dataset, batch_size=2, shuffle=False,
+    dataloader = data.DataLoader(dataset=dataset, batch_size=32, shuffle=False,
                                  collate_fn=data_utils.custom_collate)
 
     # load model params checkpoint and options
@@ -72,11 +72,15 @@ def main():
         #     break
     allobjattsvecs = torch.cat(allobjattsvecs)
     allobjattsvecs = allobjattsvecs.data.cpu().numpy()
-
+    
+    totaltop10 = 0
     totaltop5 = 0
     totaltop1 = 0
     for i, (images, objatts, lengths, imgids, imgpaths) in enumerate(dataloader):
-        print '{}/{} data items encoded'.format(i*2, len(dataloader))
+        if images is None:
+            print 'None batch: full of unked'
+            continue
+        print '{}/{} data items encoded'.format(i*32, len(dataloader)*32)
 
         if torch.cuda.is_available():
             objatts = objatts.cuda()
@@ -92,8 +96,10 @@ def main():
         targetdist = np.einsum('ij,ij->i', imgvecs, objattsvecs)
         allobjattdist = np.dot(imgvecs, allobjattsvecs.T)
         sorteddist = np.sort(allobjattdist)
+        top10pred = sum(targetdist > sorteddist[:,-10])
         top5pred = sum(targetdist > sorteddist[:,-5])
         top1pred = sum(targetdist > sorteddist[:,-1])
+        totaltop10 += top10pred
         totaltop5 += top5pred
         totaltop1 += top1pred
 
@@ -101,8 +107,8 @@ def main():
         # import pdb; pdb.set_trace()
         # break
 
-    print 'top-5 accuracy: {}, top-1 accuracy: {}'.format(
-        float(totaltop5)/len(dataset), float(totaltop1)/len(dataset)
+    print 'top-10 accuracy: {}, top-5 accuracy: {}, top-1 accuracy: {}'.format(
+        float(totaltop10)/len(dataset), float(totaltop5)/len(dataset), float(totaltop1)/len(dataset)
     )
 
 if __name__ == '__main__':
